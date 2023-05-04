@@ -30,27 +30,46 @@ class _DashboardPageState extends State<DashboardPage>
 
   callNumber() async {
     bool? res = await FlutterPhoneDirectCaller.callNumber("089510136170");
+    if (res != null && res) {
+      _logCallNumber();
+      _dialogKeterangan(context);
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      setState(() {
-        _isInBackground = false;
-      });
-    } else {
-      setState(() {
-        _isInBackground = true;
-      });
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => const DashboardPage(),
-      //   ),
-      // );
-      _logCallNumber();
-      _dialogKeterangan();
+    // if (state == AppLifecycleState.inactive) {
+    //   setState(() {
+    //     _isInBackground = false;
+    //   });
+    // } else {
+    //   setState(() {
+    //     _isInBackground = true;
+    //   });
+    //   // Navigator.pushReplacement(
+    //   //   context,
+    //   //   MaterialPageRoute(
+    //   //     builder: (context) => const DashboardPage(),
+    //   //   ),
+    //   // );
+    //   _logCallNumber();
+    //   _dialogKeterangan();
+    // }
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // TODO: Handle this case.
+        _logCallNumber();
+        break;
+      case AppLifecycleState.inactive:
+        break;
+      case AppLifecycleState.paused:
+        // TODO: Handle this case.
+        break;
+      case AppLifecycleState.detached:
+        // TODO: Handle this case.
+        break;
     }
+    print(state);
   }
 
   _logCallNumber() async {
@@ -60,18 +79,41 @@ class _DashboardPageState extends State<DashboardPage>
     });
   }
 
-  _dialogKeterangan() async {
-    AlertDialog(
-      title: const Text('Keterangan'), // To display the title it is optional
-      content: const Text(
-          'Isi Keterangan'), // Message which will be pop up on the screen
-      actions: [
-        ElevatedButton(
-          onPressed: () {},
-          child: const Text('KIRIM'),
-        ),
-      ],
+  _dialogKeterangan(BuildContext context) async {
+    String inputText = '';
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Keterangan'),
+          content: TextField(
+            onChanged: (text) {
+              inputText = text;
+            },
+            decoration: const InputDecoration(
+              hintText: 'Masukkan Keterangan',
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(
+                  {'inputText': inputText},
+                );
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Data yang Dikirim: $inputText'),
+                  duration: const Duration(seconds: 10),
+                ));
+              },
+              child: const Text('KIRIM'),
+            ),
+          ],
+        );
+      },
     );
+
+    print('Nilai yang dimasukkan: $inputText');
   }
 
   _notifWorkManager() async {
@@ -86,7 +128,7 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   Widget build(BuildContext context) {
-    print('apakah sedang di background? => ${_isInBackground}');
+    // print('apakah sedang di background? => ${_isInBackground}');
     const TextStyle mono = TextStyle(fontFamily: 'monospace');
     List<Widget>? children = <Widget>[];
 
@@ -136,14 +178,16 @@ class _DashboardPageState extends State<DashboardPage>
                       onPressed: () async {
                         print('menjalankan callNumber');
                         await callNumber();
+                        // print('menjalankan workmanager');
 
-                        await _notifWorkManager();
+                        // await _notifWorkManager();
+                        // print('menjalankan keterangan');
+                        // await _dialogKeterangan();
                       },
                       child: const Text('Get all'),
                     ),
                   ),
                 ),
-
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: ListTile(

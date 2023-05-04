@@ -6,7 +6,7 @@ import 'package:workmanager/workmanager.dart';
 ///TOP-LEVEL FUNCTION PROVIDED FOR WORK MANAGER AS CALLBACK
 void callbackDispatcher() {
   Workmanager().executeTask((dynamic task, dynamic inputData) async {
-    print('Background Services are Working!');
+    // print('Background Services are Working!');
     try {
       // final Iterable<CallLogEntry> cLog = await CallLog.get();
       // print('Queried call log entries');
