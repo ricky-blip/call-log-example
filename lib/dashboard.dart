@@ -38,32 +38,18 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // if (state == AppLifecycleState.inactive) {
-    //   setState(() {
-    //     _isInBackground = false;
-    //   });
-    // } else {
-    //   setState(() {
-    //     _isInBackground = true;
-    //   });
-    //   // Navigator.pushReplacement(
-    //   //   context,
-    //   //   MaterialPageRoute(
-    //   //     builder: (context) => const DashboardPage(),
-    //   //   ),
-    //   // );
-    //   _logCallNumber();
-    //   _dialogKeterangan();
-    // }
     switch (state) {
       case AppLifecycleState.resumed:
         // TODO: Handle this case.
+
         _logCallNumber();
+
         break;
       case AppLifecycleState.inactive:
         break;
       case AppLifecycleState.paused:
         // TODO: Handle this case.
+
         break;
       case AppLifecycleState.detached:
         // TODO: Handle this case.
@@ -72,6 +58,8 @@ class _DashboardPageState extends State<DashboardPage>
     print(state);
   }
 
+  Iterable<CallLogEntry> _callLogEntries = <CallLogEntry>[];
+
   _logCallNumber() async {
     final Iterable<CallLogEntry> result = await CallLog.query();
     setState(() {
@@ -79,21 +67,55 @@ class _DashboardPageState extends State<DashboardPage>
     });
   }
 
-  _dialogKeterangan(BuildContext context) async {
+  Widget _datalogloglog() {
+    const TextStyle mono = TextStyle(fontFamily: 'monospace');
+    List<Widget>? children = <Widget>[];
+
+    for (CallLogEntry entryKet in _callLogEntries) {
+      children.add(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            const Divider(),
+            Text('Nomor    : ${entryKet.number}', style: mono),
+            Text(
+              'DATE     : ${DateTime.fromMillisecondsSinceEpoch(entryKet.timestamp!)}',
+              style: mono,
+            ),
+            Text('DURATION : ${entryKet.duration} Detik', style: mono),
+          ],
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: children.isNotEmpty ? children[0] : const Text('data kosong'),
+    );
+  }
+
+  _dialogKeterangan(BuildContext context) {
     String inputText = '';
 
-    await showDialog(
+    showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Keterangan'),
-          content: TextField(
-            onChanged: (text) {
-              inputText = text;
-            },
-            decoration: const InputDecoration(
-              hintText: 'Masukkan Keterangan',
-            ),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              _datalogloglog(),
+              TextField(
+                onChanged: (text) {
+                  inputText = text;
+                },
+                decoration: const InputDecoration(
+                  hintText: 'Masukkan Keterangan',
+                ),
+              ),
+            ],
           ),
           actions: [
             ElevatedButton(
@@ -101,6 +123,7 @@ class _DashboardPageState extends State<DashboardPage>
                 Navigator.of(context).pop(
                   {'inputText': inputText},
                 );
+
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('Data yang Dikirim: $inputText'),
                   duration: const Duration(seconds: 10),
@@ -116,39 +139,29 @@ class _DashboardPageState extends State<DashboardPage>
     print('Nilai yang dimasukkan: $inputText');
   }
 
-  _notifWorkManager() async {
-    await Workmanager().registerOneOffTask(
-      DateTime.now().millisecondsSinceEpoch.toString(),
-      'simpleTask',
-      existingWorkPolicy: ExistingWorkPolicy.replace,
-    );
-  }
-
-  Iterable<CallLogEntry> _callLogEntries = <CallLogEntry>[];
-
   @override
   Widget build(BuildContext context) {
     // print('apakah sedang di background? => ${_isInBackground}');
-    const TextStyle mono = TextStyle(fontFamily: 'monospace');
-    List<Widget>? children = <Widget>[];
+    // const TextStyle mono = TextStyle(fontFamily: 'monospace');
+    // List<Widget>? children = <Widget>[];
 
-    for (CallLogEntry entry in _callLogEntries) {
-      children.add(
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            const Divider(),
-            Text('Nomor    : ${entry.number}', style: mono),
-            Text(
-              'DATE     : ${DateTime.fromMillisecondsSinceEpoch(entry.timestamp!)}',
-              style: mono,
-            ),
-            Text('DURATION : ${entry.duration} Detik', style: mono),
-          ],
-        ),
-      );
-    }
+    // for (CallLogEntry entry in _callLogEntries) {
+    //   children.add(
+    //     Column(
+    //       crossAxisAlignment: CrossAxisAlignment.start,
+    //       mainAxisAlignment: MainAxisAlignment.start,
+    //       children: <Widget>[
+    //         const Divider(),
+    //         Text('Nomor    : ${entry.number}', style: mono),
+    //         Text(
+    //           'DATE     : ${DateTime.fromMillisecondsSinceEpoch(entry.timestamp!)}',
+    //           style: mono,
+    //         ),
+    //         Text('DURATION : ${entry.duration} Detik', style: mono),
+    //       ],
+    //     ),
+    //   );
+    // }
     return RefreshIndicator(
       displacement: 250,
       backgroundColor: Colors.yellow,
@@ -178,11 +191,6 @@ class _DashboardPageState extends State<DashboardPage>
                       onPressed: () async {
                         print('menjalankan callNumber');
                         await callNumber();
-                        // print('menjalankan workmanager');
-
-                        // await _notifWorkManager();
-                        // print('menjalankan keterangan');
-                        // await _dialogKeterangan();
                       },
                       child: const Text('Get all'),
                     ),
@@ -190,41 +198,15 @@ class _DashboardPageState extends State<DashboardPage>
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: ListTile(
-                    title: children.isNotEmpty == true ? children[0] : null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child:
+                        //  ListTile(
+                        //   title: children.isNotEmpty == true ? children[0] : null,
+                        // ),
+                        _datalogloglog(),
                   ),
                 ),
-
-                // ignore: use_build_context_synchronously
-
-                //NOTE - Tombol Telp
-                // Center(
-                //   child: Padding(
-                //     padding: const EdgeInsets.all(8.0),
-                //     child: ElevatedButton(
-                //       onPressed: () async {
-                //         _callNumber();
-                //       },
-                //       child: const Text('Call'),
-                //     ),
-                //   ),
-                // ),
-
-                // Center(
-                //   child: Padding(
-                //     padding: const EdgeInsets.all(8.0),
-                //     child: ElevatedButton(
-                //       onPressed: () {
-                //         Workmanager().registerOneOffTask(
-                //           DateTime.now().millisecondsSinceEpoch.toString(),
-                //           'simpleTask',
-                //           existingWorkPolicy: ExistingWorkPolicy.replace,
-                //         );
-                //       },
-                //       child: const Text('Get all in background'),
-                //     ),
-                //   ),
-                // ),
               ],
             ),
           ],
